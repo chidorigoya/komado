@@ -1,6 +1,6 @@
 {
   "id": "./",
-  "name": "Kyou no Komado IDB Debug v3",
+  "name": "Kyou no Komado IDB Debug v4",
   "short_name": "小窓IDB",
   "description": "IndexedDB保存の動作確認用デバッグ修正版。",
   "start_url": "./",

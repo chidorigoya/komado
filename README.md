@@ -1,4 +1,4 @@
-# Kyou no Komado IndexedDB デバッグ修正版 v3
+# Kyou no Komado IndexedDB デバッグ修正版 v4
 
 画像とひとこと、自由なメモ欄を残して見返すための小さなアルバムPWAです。
 
@@ -78,3 +78,7 @@ localStorage版から自動移行を試みますが、環境によっては移�
 ## v3修正内容
 
 初回表示時に IndexedDB の準備変数を初期化する前に読み込み処理が走り、`Cannot access 'dbReady' before initialization` が出る問題を修正しました。
+
+## v4修正内容
+
+全記事削除ボタンが反応しない問題を修正しました。原因は、ボタン参照の登録漏れと、旧関数名（askConfirm / persistCards / selectedImage）が残っていたことです。

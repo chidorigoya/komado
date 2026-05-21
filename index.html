@@ -827,8 +827,8 @@
   <div id="toast" class="toast">保存しました</div>
 
   <script>
-    const STORAGE_KEY = 'kyou-no-komado-idb-debug-v3';
-    const SETTINGS_KEY = 'kyou-no-komado-idb-settings-debug-v3';
+    const STORAGE_KEY = 'kyou-no-komado-idb-debug-v4';
+    const SETTINGS_KEY = 'kyou-no-komado-idb-settings-debug-v4';
     const PAGE_SIZE = 4;
     const THEMES = {
       'milk-tea': { name: 'ミルクティー', colors: ['#fffaf4', '#a86f52', '#f1dfcf'] },
@@ -844,7 +844,7 @@
     const els = {
       newBtn: $('newBtn'), settingsBtn: $('settingsBtn'), monthFilter: $('monthFilter'), favoriteOnlyTop: $('favoriteOnlyTop'), favoritePill: $('favoritePill'), favoritePillIcon: $('favoritePillIcon'),
       formModal: $('formModal'), formTitle: $('formTitle'), formCloseX: $('formCloseX'), date: $('date'), title: $('title'), image: $('image'), preview: $('preview'), note: $('note'), tags: $('tags'), reply: $('reply'), favoriteInput: $('favoriteInput'), saveBtn: $('saveBtn'), copyBtn: $('copyBtn'), cancelFormBtn: $('cancelFormBtn'), resetFormBtn: $('resetFormBtn'), dangerZone: $('dangerZone'), deleteEditBtn: $('deleteEditBtn'),
-      cards: $('cards'), count: $('count'), moreWrap: $('moreWrap'), moreBtn: $('moreBtn'), moreHint: $('moreHint'), search: $('search'), searchBtn: $('searchBtn'), resetSearchBtn: $('resetSearchBtn'), searchStatus: $('searchStatus'), exportBtn: $('exportBtn'), importInput: $('importInput'), importVisualBtn: $('importVisualBtn'),
+      cards: $('cards'), count: $('count'), moreWrap: $('moreWrap'), moreBtn: $('moreBtn'), moreHint: $('moreHint'), search: $('search'), searchBtn: $('searchBtn'), resetSearchBtn: $('resetSearchBtn'), searchStatus: $('searchStatus'), exportBtn: $('exportBtn'), importInput: $('importInput'), importVisualBtn: $('importVisualBtn'), clearAllBtn: $('clearAllBtn'),
       copyModal: $('copyModal'), copyText: $('copyText'), tryCopyBtn: $('tryCopyBtn'), selectCopyBtn: $('selectCopyBtn'), closeCopyX: $('closeCopyX'),
       backupModal: $('backupModal'), backupText: $('backupText'), selectBackupBtn: $('selectBackupBtn'), closeBackupBtn: $('closeBackupBtn'), closeBackupX: $('closeBackupX'),
       settingsModal: $('settingsModal'), themeGrid: $('themeGrid'), extraLabelInput: $('extraLabelInput'), inlineCopyInput: $('inlineCopyInput'), saveSettingsBtn: $('saveSettingsBtn'), closeSettingsBtn: $('closeSettingsBtn'), closeSettingsX: $('closeSettingsX'), aboutBtn: $('aboutBtn'), aboutModal: $('aboutModal'), closeAboutX: $('closeAboutX'), closeAboutBtn: $('closeAboutBtn'), replyLabel: $('replyLabel'),
@@ -861,6 +861,14 @@
       els.image.addEventListener('change', handleImage); els.saveBtn.addEventListener('click', saveCard); els.copyBtn.addEventListener('click', () => showCopyText(buildCopyTextFromForm())); els.cancelFormBtn.addEventListener('click', requestCloseForm); els.formCloseX.addEventListener('click', requestCloseForm); els.resetFormBtn.addEventListener('click', resetFormToSnapshot); els.deleteEditBtn.addEventListener('click', deleteEditingCard); els.moreBtn.addEventListener('click', showMore);
       els.searchBtn.addEventListener('click', runSearch); els.resetSearchBtn.addEventListener('click', resetSearch); els.search.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
       els.exportBtn.addEventListener('click', exportBackup); els.importVisualBtn.addEventListener('click', () => els.importInput.click()); els.clearAllBtn?.addEventListener('click', clearAllCards); els.importInput.addEventListener('change', importBackup);
+      document.addEventListener('click', (event) => {
+        const clearBtn = event.target.closest?.('#clearAllBtn');
+        if (clearBtn) {
+          event.preventDefault();
+          clearAllCards();
+        }
+      });
+
       els.tryCopyBtn.addEventListener('click', () => copyTextArea(els.copyText, 'コピーしました')); els.selectCopyBtn.addEventListener('click', () => selectTextArea(els.copyText)); els.closeCopyX.addEventListener('click', () => closeModal(els.copyModal));
       els.selectBackupBtn.addEventListener('click', () => selectTextArea(els.backupText)); els.closeBackupBtn.addEventListener('click', () => closeModal(els.backupModal)); els.closeBackupX.addEventListener('click', () => closeModal(els.backupModal));
       els.saveSettingsBtn?.addEventListener('click', saveSettingsForm); els.closeSettingsBtn?.addEventListener('click', () => closeModal(els.settingsModal)); els.closeSettingsX.addEventListener('click', () => closeModal(els.settingsModal)); els.aboutBtn?.addEventListener('click', () => openModal(els.aboutModal)); els.closeAboutX?.addEventListener('click', () => closeModal(els.aboutModal)); els.closeAboutBtn?.addEventListener('click', () => closeModal(els.aboutModal));
@@ -1160,32 +1168,36 @@ ${extra}` : ''}
         toast('削除する記事がありません');
         return;
       }
-      const first = await askConfirm({
+      const first = await showConfirm({
         title: 'すべての記事を削除',
         message: `保存されている${cards.length}件の記事をすべて削除します。先にバックアップを書き出しておくことをおすすめします。`,
         okText: '削除へ進む',
         danger: true
       });
       if (!first) return;
-      const second = await askConfirm({
+      const second = await showConfirm({
         title: '本当に削除しますか？',
         message: 'この操作は取り消せません。バックアップしていない内容は戻せなくなります。',
         okText: 'すべて削除',
         danger: true
       });
       if (!second) return;
-      cards = [];
-      selectedImage = '';
-      editingId = null;
-      visibleCount = 12;
-      persistCards();
-      renderMonthOptions();
-      renderCards();
-      closeModal(els.formModal);
-      toast('すべての記事を削除しました');
+      try {
+        cards = [];
+        currentImage = '';
+        editingId = null;
+        visibleCount = PAGE_SIZE;
+        await persist();
+        renderMonthOptions();
+        renderCards();
+        closeModal(els.formModal);
+        toast('すべての記事を削除しました');
+      } catch (error) {
+        reportDbError('clearAll', error);
+      }
     }
-    async function deleteEditingCard() { if (!editingId) return; const ok = await showConfirm({ title: 'この小窓を削除する？', message: 'この操作は元に戻せません。', okText: '削除する', danger: true }); if (!ok) return; cards = cards.filter(item => item.id !== editingId); persist(); renderMonthOptions(); renderCards(); closeFormWithoutSaving(); toast('削除しました'); }
-    function exportBackup() { const payload = { app: 'きょうの小窓', version: 203, exportedAt: new Date().toISOString(), settings, cards }; const text = JSON.stringify(payload, null, 2); els.backupText.value = text; openModal(els.backupModal); setTimeout(() => selectTextArea(els.backupText), 80); try { const blob = new Blob([text], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); const today = new Date().toISOString().slice(0, 10); a.href = url; a.download = `kyou-no-komado-backup-${today}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('バックアップを書き出しました'); } catch (error) { console.warn(error); toast('手動保存用に表示しました'); } }
+    async function deleteEditingCard() { if (!editingId) return; const ok = await showConfirm({ title: 'この小窓を削除する？', message: 'この操作は元に戻せません。', okText: '削除する', danger: true }); if (!ok) return; cards = cards.filter(item => item.id !== editingId); await persist(); renderMonthOptions(); renderCards(); closeFormWithoutSaving(); toast('削除しました'); }
+    function exportBackup() { const payload = { app: 'きょうの小窓', version: 204, exportedAt: new Date().toISOString(), settings, cards }; const text = JSON.stringify(payload, null, 2); els.backupText.value = text; openModal(els.backupModal); setTimeout(() => selectTextArea(els.backupText), 80); try { const blob = new Blob([text], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); const today = new Date().toISOString().slice(0, 10); a.href = url; a.download = `kyou-no-komado-backup-${today}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('バックアップを書き出しました'); } catch (error) { console.warn(error); toast('手動保存用に表示しました'); } }
     function importBackup(event) { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = async () => { try { const data = JSON.parse(reader.result); const importedCards = Array.isArray(data) ? data : data.cards; if (!Array.isArray(importedCards)) throw new Error('Invalid backup'); const ok = await showConfirm({ title: 'バックアップを読み込む？', message: '今の小窓にバックアップを追加します。同じIDの小窓は重複しません。', okText: '読み込む', danger: false }); if (!ok) return; if (data.settings) { settings = { ...DEFAULT_SETTINGS, ...settings, ...data.settings }; persistSettings(); applySettings(false); } const existingIds = new Set(cards.map(card => card.id)); const normalized = importedCards.map(card => ({ ...card, id: card.id || crypto.randomUUID(), favorite: Boolean(card.favorite), mood: card.mood || '' })); const fresh = normalized.filter(card => !existingIds.has(card.id)); cards = [...fresh, ...cards]; sortCards(); persist(); renderMonthOptions(); visibleCount = PAGE_SIZE; renderCards(); toast(`${fresh.length}件読み込みました`); } catch (error) { console.error(error); toast('読み込みに失敗しました'); } finally { els.importInput.value = ''; } }; reader.readAsText(file); }
     function showConfirm({ title, message, okText='OK', danger=false }) { els.confirmTitle.textContent = title; els.confirmMessage.textContent = message; els.confirmOkBtn.textContent = okText; els.confirmOkBtn.className = danger ? 'danger' : ''; els.confirmOkBtn.style.background = danger ? '' : 'var(--accent)'; openModal(els.confirmModal); return new Promise(resolve => { confirmResolve = resolve; }); }
     function resolveConfirm(value) { closeModal(els.confirmModal); if (confirmResolve) { confirmResolve(value); confirmResolve = null; } }

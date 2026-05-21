@@ -1,4 +1,4 @@
-const CACHE_NAME = "komado-idb-debug-v3-1";
+const CACHE_NAME = "komado-idb-debug-v4-1";
 const APP_SHELL = [
   "./",
   "./index.html",
