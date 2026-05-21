@@ -1,4 +1,4 @@
-# Kyou no Komado IndexedDB デバッグ版
+# Kyou no Komado IndexedDB デバッグ修正版 v3
 
 画像とひとこと、自由なメモ欄を残して見返すための小さなアルバムPWAです。
 
@@ -74,3 +74,7 @@ localStorage版から自動移行を試みますが、環境によっては移�
 ## デバッグ表示について
 
 保存倉庫の読み込みや保存に失敗した場合、画面下部のトーストにエラー内容を表示します。表示された文言を控えると原因調査に使えます。
+
+## v3修正内容
+
+初回表示時に IndexedDB の準備変数を初期化する前に読み込み処理が走り、`Cannot access 'dbReady' before initialization` が出る問題を修正しました。

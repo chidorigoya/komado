@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Kyou no Komado IDB Debug",
+  "name": "Kyou no Komado IDB Debug v3",
   "short_name": "小窓IDB",
-  "description": "IndexedDB保存の動作確認用デバッグ版。",
+  "description": "IndexedDB保存の動作確認用デバッグ修正版。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
