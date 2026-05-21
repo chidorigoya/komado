@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Kyou no Komado IDB",
+  "name": "Kyou no Komado IDB Debug",
   "short_name": "小窓IDB",
-  "description": "画像を多めに保存しやすいIndexedDB版の小さなアルバムPWA。",
+  "description": "IndexedDB保存の動作確認用デバッグ版。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
